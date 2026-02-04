@@ -108,15 +108,56 @@ export namespace MCP {
     })
   }
 
+  /**
+   * Sanitize invalid JSON schemas from MCP servers
+   * Ensures schemas are valid Draft 7 before sending to strict validators like Kimi K2.5
+   */
+  function sanitizeSchema(schema: unknown): JSONSchema7 {
+    const input = typeof schema === 'object' && schema !== null ? schema : {}
+
+    // Build valid base schema
+    const result: JSONSchema7 = {
+      type: "object",
+      properties: {},
+      additionalProperties: false,
+    }
+
+    // Only add properties if they're valid objects
+    if (input.properties && typeof input.properties === "object") {
+      result.properties = input.properties as JSONSchema7["properties"]
+    }
+
+    // Only add required if it's an array
+    if (Array.isArray(input.required)) {
+      const validProperties = result.properties || {}
+      // Only include fields that exist in properties
+      result.required = input.required.filter(field => field in validProperties)
+    }
+
+    // Handle recursive schemas in properties
+    if (result.properties) {
+      for (const [key, value] of Object.entries(result.properties)) {
+        if (typeof value === 'object' && value !== null) {
+          result.properties[key] = sanitizeSchema(value) as JSONSchema7["properties"][string]
+        }
+      }
+    }
+
+    return result
+  }
+
   // Convert MCP tool definition to AI SDK Tool type
   async function convertMcpTool(mcpTool: MCPToolDef, client: MCPClient): Promise<Tool> {
     const inputSchema = mcpTool.inputSchema
 
-    // Spread first, then override type to ensure it's always "object"
+    // Sanitize invalid schemas before spreading
+    const sanitized = sanitizeSchema(inputSchema)
+    
+    // Build valid schema from sanitized input
     const schema: JSONSchema7 = {
-      ...(inputSchema as JSONSchema7),
+      ...sanitized,
       type: "object",
-      properties: (inputSchema.properties ?? {}) as JSONSchema7["properties"],
+      properties: sanitized.properties ?? {},
       additionalProperties: false,
     }
     const config = await Config.get()
