@@ -1,4 +1,85 @@
-- To test opencode in the `packages/opencode` directory you can run `bun dev`
-- To regenerate the javascript SDK, run ./packages/sdk/js/script/build.ts
-- ALWAYS USE PARALLEL TOOLS WHEN APPLICABLE.
-- the default branch in this repo is `dev`
+# Claude Code Instructions for opencode
+
+## MANDATORY: Read AGENTS.md First
+
+Before ANY work in this repo: Read `AGENTS.md` for cross-agent compliance.
+AGENTS.md is symlinked to CLAUDE.md — single source of truth across all repos and tools.
+
+**Critical guardrails**:
+- **Token cost**: Blocking wait ($0.20) vs polling loop ($20-40) = 100x savings
+- **MCP vs Direct API**: <10 workflows use MCP, >10 use templates + urllib
+- **Pre-commit hooks**: Automatically block anti-patterns (git-enforced)
+
+---
+
+## PROJECT GOAL
+
+[1-2 sentence description of repo purpose]
+
+---
+
+## Execution Tasks
+
+**For multi-phase overnight work, use the centralized orchestration pattern.**
+
+### Quick Start
+
+1. **Copy template:**
+   ```bash
+   cp ~/.jinyang/templates/execution_script_template.py scripts/<task_name>_execute.py
+   ```
+
+2. **Implement phases** as `OrchestrationScript` subclass
+
+3. **Create Linear issue** from template:
+   ```bash
+   cat ~/.jinyang/templates/linear_execution_issue.md
+   ```
+
+4. **Validate before delegating:**
+   ```bash
+   python ~/.jinyang/scripts/validate_execution_issue.py ROM-XXX
+   ```
+
+5. **Delegate to jinyang** — execution happens automatically
+
+### Resources
+
+- **Template:** `~/.jinyang/templates/execution_script_template.py`
+- **Docs:** `~/.jinyang/docs/EXECUTION_PATTERN.md`
+- **Issue template:** `~/.jinyang/templates/linear_execution_issue.md`
+
+**DON'T:** Create multiple Linear issues with `blockedBy` (doesn't auto-trigger)
+**DO:** Single issue, single orchestration script, all phases sequential
+
+---
+
+## Project Structure
+
+```
+[Describe key directories and files]
+```
+
+---
+
+## Development Workflow
+
+### Testing
+```bash
+[test commands]
+```
+
+### Building
+```bash
+[build commands]
+```
+
+---
+
+## Hard-Won Lessons
+
+[Document institutional knowledge here as it accumulates]
+
+---
+
+*Last updated: 2026-02-06*
