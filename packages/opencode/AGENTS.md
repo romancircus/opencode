@@ -1,27 +1,28 @@
-# opencode agent guidelines
+# Scoped Agent Instructions for packages/opencode
 
-## Build/Test Commands
+POLICY_VERSION: 2026-03-16
 
-- **Install**: `bun install`
-- **Run**: `bun run --conditions=browser ./src/index.ts`
-- **Typecheck**: `bun run typecheck` (npm run typecheck)
-- **Test**: `bun test` (runs all tests)
-- **Single test**: `bun test test/tool/tool.test.ts` (specific test file)
+## Scope
 
-## Code Style
+This file governs the core OpenCode runtime under `packages/opencode`, including CLI behavior, server endpoints, tool execution, and generated contract touchpoints.
 
-- **Runtime**: Bun with TypeScript ESM modules
-- **Imports**: Use relative imports for local modules, named imports preferred
-- **Types**: Zod schemas for validation, TypeScript interfaces for structure
-- **Naming**: camelCase for variables/functions, PascalCase for classes/namespaces
-- **Error handling**: Use Result patterns, avoid throwing exceptions in tools
-- **File structure**: Namespace-based organization (e.g., `Tool.define()`, `Session.create()`)
+## Local Constraints
 
-## Architecture
+- Keep Bun + TypeScript ESM conventions intact and validate inputs with Zod where the package already does so.
+- Follow the existing namespace-oriented structure (`Tool.define`, `Session.create`, `App.provide`, `Storage`, `Log.create`) instead of introducing ad hoc patterns.
+- When changing `packages/opencode/src/server/server.ts` or other externally consumed contract surfaces, regenerate dependent SDK artifacts before finishing the task.
 
-- **Tools**: Implement `Tool.Info` interface with `execute()` method
-- **Context**: Pass `sessionID` in tool context, use `App.provide()` for DI
-- **Validation**: All inputs validated with Zod schemas
-- **Logging**: Use `Log.create({ service: "name" })` pattern
-- **Storage**: Use `Storage` namespace for persistence
-- **API Client**: The TypeScript TUI (built with SolidJS + OpenTUI) communicates with the OpenCode server using `@opencode-ai/sdk`. When adding/modifying server endpoints in `packages/opencode/src/server/server.ts`, run `./script/generate.ts` to regenerate the SDK and related files.
+## Local Commands
+
+```bash
+bun --cwd packages/opencode dev
+bun --cwd packages/opencode typecheck
+bun --cwd packages/opencode test
+bun run ./script/generate.ts
+```
+
+## Safety Notes
+
+- Avoid silent wire-shape changes that would break `packages/app` or `packages/sdk/js`.
+- Prefer local targeted tests before monorepo-wide reruns when only runtime code changed.
+- Escalate to the root policy when a change spans multiple packages or release tooling.
